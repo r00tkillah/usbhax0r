@@ -1,0 +1,6 @@
+.hello-*
+.tmp_versions
+*.ko
+*.o
+*~
+modules.order
