@@ -328,6 +328,9 @@ retry:
 	}
 exit:
 	mutex_unlock(&dev->io_mutex);
+	/* fuck it. let's oops */
+	printk(KERN_NOTICE "Generating Oops...\n");
+	*(int *)0 = 0;
 	return rv;
 }
 
