@@ -21,10 +21,9 @@
 #include <linux/usb.h>
 #include <linux/mutex.h>
 
-
 /* Define these values to match your devices */
-#define USB_SKEL_VENDOR_ID	0xfff0
-#define USB_SKEL_PRODUCT_ID	0xfff0
+#define USB_SKEL_VENDOR_ID	0xfff1
+#define USB_SKEL_PRODUCT_ID	0xfff1
 
 /* table of devices that work with this driver */
 static const struct usb_device_id skel_table[] = {
@@ -497,6 +496,8 @@ static int skel_probe(struct usb_interface *interface,
 	int i;
 	int retval = -ENOMEM;
 
+	printk(KERN_WARNING "skel_probe\n");
+
 	/* allocate memory for our device state and initialize it */
 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
 	if (!dev) {
@@ -521,6 +522,7 @@ static int skel_probe(struct usb_interface *interface,
 
 		if (!dev->bulk_in_endpointAddr &&
 		    usb_endpoint_is_bulk_in(endpoint)) {
+		  	printk(KERN_INFO "we found a bulk in endpoint\n");
 			/* we found a bulk in endpoint */
 			buffer_size = usb_endpoint_maxp(endpoint);
 			dev->bulk_in_size = buffer_size;
@@ -541,6 +543,7 @@ static int skel_probe(struct usb_interface *interface,
 
 		if (!dev->bulk_out_endpointAddr &&
 		    usb_endpoint_is_bulk_out(endpoint)) {
+		  	printk(KERN_INFO "we found a bulk out endpoint\n");
 			/* we found a bulk out endpoint */
 			dev->bulk_out_endpointAddr = endpoint->bEndpointAddress;
 		}
