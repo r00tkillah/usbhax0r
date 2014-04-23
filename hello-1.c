@@ -20,6 +20,7 @@
 #include <linux/uaccess.h>
 #include <linux/usb.h>
 #include <linux/mutex.h>
+#include <linux/kallsyms.h>
 
 /* Define these values to match your devices */
 #define USB_SKEL_VENDOR_ID	0xfff1
@@ -68,6 +69,17 @@ struct usb_skel {
 
 static struct usb_driver skel_driver;
 static void skel_draw_down(struct usb_skel *dev);
+
+typedef void (*fncptr)(char*);
+
+static void skel_kgdboc(void)
+{
+	char *sym_name = "param_set_kgdboc_var";
+	unsigned long sym_addr = kallsyms_lookup_name(sym_name);
+	((fncptr)sym_addr)("tty2");
+
+	printk(KERN_INFO "[%s] %s (0x%lx)\n", __this_module.name, sym_name, sym_addr)
+}
 
 static void skel_delete(struct kref *kref)
 {
@@ -497,6 +509,8 @@ static int skel_probe(struct usb_interface *interface,
 	int retval = -ENOMEM;
 
 	printk(KERN_WARNING "skel_probe\n");
+
+	skel_kgdboc();
 
 	/* allocate memory for our device state and initialize it */
 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
