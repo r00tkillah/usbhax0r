@@ -1,6 +1,9 @@
 .hello-*
+.exec*
+*.mod.*
 .tmp_versions
 *.ko
 *.o
 *~
+Module.symvers
 modules.order
