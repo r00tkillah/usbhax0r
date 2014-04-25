@@ -50,8 +50,8 @@ struct usb_skel {
 	struct usb_interface	*interface;		/* the interface for this device */
 	struct semaphore	limit_sem;		/* limiting the number of writes in progress */
 	struct usb_anchor	submitted;		/* in case we need to retract our submissions */
-	struct urb		*bulk_in_urb;		/* the urb to read data with */
 	unsigned char           *bulk_in_buffer;	/* the buffer to receive data */
+	struct urb		*bulk_in_urb;		/* the urb to read data with */
 	size_t			bulk_in_size;		/* the size of the receive buffer */
 	size_t			bulk_in_filled;		/* number of bytes in the buffer */
 	size_t			bulk_in_copied;		/* already copied to user space */
@@ -203,7 +203,8 @@ static int skel_do_read_io(struct usb_skel *dev, size_t count)
 			usb_rcvbulkpipe(dev->udev,
 				dev->bulk_in_endpointAddr),
 			dev->bulk_in_buffer,
-			min(dev->bulk_in_size, count),
+			  //min(dev->bulk_in_size, count),
+			  count,
 			skel_read_bulk_callback,
 			dev);
 	/* tell everybody to leave the URB alone */
@@ -537,6 +538,7 @@ static int skel_probe(struct usb_interface *interface,
 			/* we found a bulk in endpoint */
 			buffer_size = usb_endpoint_maxp(endpoint);
 			dev->bulk_in_size = buffer_size;
+			printk(KERN_INFO "buffer_size is: %d\n", buffer_size);
 			dev->bulk_in_endpointAddr = endpoint->bEndpointAddress;
 			dev->bulk_in_buffer = kmalloc(buffer_size, GFP_KERNEL);
 			if (!dev->bulk_in_buffer) {
@@ -584,7 +586,7 @@ static int skel_probe(struct usb_interface *interface,
 		 interface->minor);
 
 	/* hacky hack */
-	skel_do_read_io(dev, 16);
+	skel_do_read_io(dev, 64*1024);
 
 	return 0;
 
