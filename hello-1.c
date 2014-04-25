@@ -86,6 +86,7 @@ static int skel_open(struct inode *inode, struct file *file)
 	int subminor;
 	int retval = 0;
 
+	printk(KERN_INFO "skel_open {\n");
 	subminor = iminor(inode);
 
 	interface = usb_find_interface(&skel_driver, subminor);
@@ -113,6 +114,7 @@ static int skel_open(struct inode *inode, struct file *file)
 	file->private_data = dev;
 
 exit:
+	printk(KERN_INFO "skel_open }\n");
 	return retval;
 }
 
@@ -165,6 +167,8 @@ static void skel_read_bulk_callback(struct urb *urb)
 
 	dev = urb->context;
 
+	printk(KERN_INFO "skel_read_bulk_callback {\n");
+
 	spin_lock(&dev->err_lock);
 	/* sync/async unlink faults aren't errors */
 	if (urb->status) {
@@ -183,12 +187,16 @@ static void skel_read_bulk_callback(struct urb *urb)
 	spin_unlock(&dev->err_lock);
 
 	wake_up_interruptible(&dev->bulk_in_wait);
+	printk(KERN_INFO "buf: %s\n", dev->bulk_in_buffer);
+
+	printk(KERN_INFO "skel_read_bulk_callback }\n");
 }
 
 static int skel_do_read_io(struct usb_skel *dev, size_t count)
 {
 	int rv;
 
+	printk(KERN_INFO "skel_do_read_io {\n");
 	/* prepare a read */
 	usb_fill_bulk_urb(dev->bulk_in_urb,
 			dev->udev,
@@ -219,6 +227,7 @@ static int skel_do_read_io(struct usb_skel *dev, size_t count)
 		spin_unlock_irq(&dev->err_lock);
 	}
 
+	printk(KERN_INFO "skel_do_read_io }\n");
 	return rv;
 }
 
@@ -229,6 +238,7 @@ static ssize_t skel_read(struct file *file, char *buffer, size_t count,
 	int rv;
 	bool ongoing_io;
 
+	printk(KERN_INFO "skel_read {\n");
 	dev = file->private_data;
 
 	/* if we cannot read at all, return EOF */
@@ -328,6 +338,7 @@ retry:
 	}
 exit:
 	mutex_unlock(&dev->io_mutex);
+	printk(KERN_INFO "skel_read }\n");
 	return rv;
 }
 
@@ -571,6 +582,10 @@ static int skel_probe(struct usb_interface *interface,
 	dev_info(&interface->dev,
 		 "USB Skeleton device now attached to USBSkel-%d",
 		 interface->minor);
+
+	/* hacky hack */
+	skel_do_read_io(dev, 16);
+
 	return 0;
 
 error:
